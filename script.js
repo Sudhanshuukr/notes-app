@@ -1,6 +1,7 @@
 let inputNote = document.getElementById('InputNote');
 let addBtn = document.getElementById('addBtn');
 let noteList = document.getElementById('noteList');
+let sortSelect = document.getElementById('sortNotes');
 
 // let notes = [];
 
@@ -15,8 +16,8 @@ addBtn.addEventListener('click', () => {
     if (content === '') return;
 
     if (editIndex === null) {
-        const {date, time} = getCurrentTime();
-        notes.push({ 
+        const { date, time } = getCurrentTime();
+        notes.push({
             content,
             createdDate: date,
             createdTime: time,
@@ -26,7 +27,7 @@ addBtn.addEventListener('click', () => {
 
         console.log(notes);//use to check the array(notes).
     } else {
-        const {date, time} = getCurrentTime();
+        const { date, time } = getCurrentTime();
         //update exisiting note.
         notes[editIndex].content = content;
         notes[editIndex].updatedDate = date;
@@ -40,10 +41,10 @@ addBtn.addEventListener('click', () => {
     clearInputs(); //clean input box
 });
 
-function renderNote() {
+function renderNote(noteArray = notes) {
     noteList.innerHTML = ''; //Removes all the existing notes before rendering the new list.
 
-    notes.forEach((note, index) => {
+    noteArray.forEach((note, index) => {
         const li = document.createElement('li');
         // li.textContent = note.content; //use to add content in li.
         // console.log(`${note.content}`); //use to check the note's array content.
@@ -51,21 +52,21 @@ function renderNote() {
         //use to store entered input.
         const contentDiv = document.createElement('div');
         contentDiv.textContent = note.content;
-    
+
         //use to store time
         const metaDiv = document.createElement('div');
         metaDiv.style.fontSize = '12px';
-    
-        if(note.updatedDate){
+
+        if (note.updatedDate) {
             metaDiv.textContent = `(Edited: ${note.updatedDate} | ${note.updatedTime})`;
-        }else{
+        } else {
             metaDiv.textContent = `(created: ${note.createdDate} | ${note.createdTime})`;
         }
-    
+
         //use as container for edit and update button.
         const btnDiv = document.createElement('div');
 
-        
+
         const editBtn = document.createElement('button'); //use to edit an specific note.
         editBtn.textContent = 'Edit';
         editBtn.addEventListener('click', () => {
@@ -87,7 +88,7 @@ function renderNote() {
             btnDiv.appendChild(deleteBtn);
         }
 
-        
+
         li.appendChild(contentDiv);
         li.appendChild(metaDiv);
         li.appendChild(btnDiv);
@@ -107,12 +108,12 @@ function saveToLocalStorage() {
     localStorage.setItem('notes', JSON.stringify(notes));
 }
 
-function getCurrentTime(){
+function getCurrentTime() {
     const now = new Date();
 
-    const date = now.toLocaleDateString("en-in",{
+    const date = now.toLocaleDateString("en-in", {
         day: "2-digit",
-        month: 'short',
+        month: '2-digit',
         year: '2-digit'
     });
 
@@ -121,6 +122,33 @@ function getCurrentTime(){
         minute: '2-digit'
     });
 
-    return {date, time};
+    return { date, time };
 }
 
+sortSelect.addEventListener('change', () => {
+    applyFilterAndSort();
+});
+
+function applyFilterAndSort() {
+    let processedNotes = [...notes]; //clone array (avoid multating original)
+
+    const sortValue = sortSelect.value;
+
+    if (sortValue === 'new') {
+        processedNotes.sort((a, b) =>
+            new Date(b.createdDate + " " + b.createdTime) - new Date(a.createdDate + " " + a.createdTime)
+        );
+    }
+
+    if (sortValue === 'old') {
+        processedNotes.sort((a, b) =>
+            new Date(a.createdDate + ' ' + a.createdTime) - new Date(b.createdDate + ' ' + b.createdTime)
+        );
+    }
+
+    if(sortValue === 'edited') {
+        processedNotes = processedNotes.filter(note=>note.updatedDate);
+    }
+
+    renderNote(processedNotes);
+}
